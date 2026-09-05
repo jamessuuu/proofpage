@@ -69,17 +69,45 @@ package.json scripts"). It does not blur that distinction.
 
 ## Worked example
 
-This repo runs proofpage on itself. The committed result is
-[`examples/self-proof.html`](examples/self-proof.html): open it in a browser,
-or print it, and every row traces to a command you can rerun yourself:
+This repo runs proofpage on itself, and the committed output is the demo.
+Open the demo, [`examples/self-proof.html`](examples/self-proof.html), in a
+browser, or print it. Nothing is fetched when it loads, so it works offline
+and survives a PDF. Every row traces to a command you can rerun yourself:
 
     npm test
     node scripts/lint.mjs
 
-Regenerate it with:
+In any repo that has proofpage installed, the whole thing is two commands:
 
-    node bin/proofpage.mjs --out examples/self-proof.html
-    node bin/proofpage.mjs --check examples/self-proof.html
+```sh
+proofpage --out proof.html
+proofpage --check proof.html
+```
+
+That writes into the current directory, which always exists. Point `--out` at a
+subdirectory only if you have already made it: proofpage will not create one
+for you, and until 2026-09-05 this section told you to write into `examples/`,
+which fails with ENOENT on a fresh install. CL6 in the harness caught it by
+running this snippet against the packed tarball, which is the entire reason
+that check exists.
+
+From a clone of this repo, without installing, the same two steps are:
+
+```sh
+node bin/proofpage.mjs --out proof.html
+node bin/proofpage.mjs --check proof.html
+```
+
+## Exit codes
+
+| Code | Meaning |
+|---|---|
+| `0` | Every discovered check ran and passed, or `--check` found no violations. |
+| `1` | A check ran and failed, a check could not be run at all, or `--check` found a violation. This is the CI signal. |
+| `2` | proofpage was used wrongly or could not read what it needs: an unknown flag, a missing file passed to `--check`, an unreadable `package.json`. Nothing was measured, so nothing is reported. |
+
+The `1` and `2` split matters: `1` means the repo is in a state you should
+look at, `2` means proofpage never got far enough to have an opinion.
 
 ## What ends up in proof.json
 

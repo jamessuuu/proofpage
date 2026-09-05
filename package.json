@@ -21,6 +21,19 @@
   },
   "license": "MIT",
   "author": "James Lorenz Santos",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamessuuu/proofpage.git"
+  },
+  "homepage": "https://github.com/jamessuuu/proofpage#readme",
+  "bugs": {
+    "url": "https://github.com/jamessuuu/proofpage/issues"
+  },
+  "exports": {
+    ".": "./src/run.mjs",
+    "./render": "./src/render.mjs"
+  },
+  "sideEffects": false,
   "keywords": [
     "ci",
     "proof",
