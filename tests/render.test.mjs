@@ -45,6 +45,20 @@ test('--check FAILS on a remote-fetched resource (protocol-relative href)', () =
   assert.ok(problems.some((p) => p.includes('remote resource')));
 });
 
+test('--check ALLOWS a plain navigational <a href> to the artifact it measured', () => {
+  // The counterpart to the two tests above, and the reason they are scoped to
+  // src= and <link href> rather than every href. An <a> fetches nothing until
+  // it is clicked, and a receipts page has to be able to point at the commit
+  // and the repo it measured. This test exists so a future tightening of the
+  // remote-resource rule cannot quietly take that away.
+  const html = cleanHtml().replace(
+    '<h1>Report</h1>',
+    '<h1>Report</h1><p><a href="https://github.com/example/repo/commit/abc123">the commit</a></p>',
+  );
+  const { problems } = checkHtmlString(html);
+  assert.deepEqual(problems, []);
+});
+
 test('--check FAILS on a <script> tag', () => {
   const html = cleanHtml().replace('</body>', '<script>console.log(1)</script></body>');
   const { problems } = checkHtmlString(html);

@@ -289,10 +289,18 @@ export function checkHtmlString(html) {
 
   if (!/<!doctype html>/i.test(html)) problems.push('missing <!doctype html>');
 
-  // Any src=/href= pointing at an http(s) or protocol-relative URL is
-  // something the browser would fetch (or a link the reader could follow
-  // out to the network); this page must not reference anything remote.
-  const remote = [...html.matchAll(/\b(?:src|href)\s*=\s*"((?:https?:)?\/\/[^"]*)"/gi)].map((m) => m[1]);
+  // The rule is "this page fetches nothing when it opens", so it targets
+  // SUBRESOURCES the browser loads on its own: src= on img/script/iframe and
+  // friends, href= on <link>. A plain <a href> is deliberately NOT a
+  // violation. It issues no request until somebody clicks it, and a receipts
+  // page whose entire job is to point at the artifact it measured has to be
+  // able to link to the commit and the repo. Treating a navigation as a fetch
+  // is a category error that would make the product worse at the one thing it
+  // is for. The <a> is still held to the offline rule below: it may not be the
+  // page's only evidence, because a reader offline must still see the numbers.
+  const remoteSrc = [...html.matchAll(/\bsrc\s*=\s*"((?:https?:)?\/\/[^"]*)"/gi)].map((m) => m[1]);
+  const remoteLink = [...html.matchAll(/<link\b[^>]*\bhref\s*=\s*"((?:https?:)?\/\/[^"]*)"/gi)].map((m) => m[1]);
+  const remote = [...remoteSrc, ...remoteLink];
   if (remote.length) {
     problems.push(`remote resource referenced: ${[...new Set(remote)].join(', ')}`);
   }

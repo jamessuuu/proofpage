@@ -24,6 +24,12 @@ Run `proofpage --check <file>` against any rendered page (including one you
 didn't generate yourself) to verify these rules mechanically instead of
 trusting them.
 
+"Zero network requests" means the page fetches nothing when it opens: no
+remote stylesheet, script, font or image. A plain `<a href>` out to the commit
+or the repo is allowed, because it requests nothing until somebody clicks it,
+and a receipts page that cannot link to the artifact it measured would be
+worse at its only job.
+
 ## Install
 
     npm install --save-dev proofpage
