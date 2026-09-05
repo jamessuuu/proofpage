@@ -59,6 +59,27 @@ test('--check ALLOWS a plain navigational <a href> to the artifact it measured',
   assert.deepEqual(problems, []);
 });
 
+test('--check ALLOWS <link rel=canonical>, which fetches nothing', () => {
+  // Caught by running --check against this project's own landing page on
+  // 2026-09-06. A canonical is metadata; the browser issues no request for it.
+  // Flagging it would forbid a page from declaring its own canonical URL, which
+  // every indexable page should do. Same category error as treating <a href>
+  // as a fetch, one level down.
+  const html = cleanHtml().replace('</head>', '<link rel="canonical" href="https://example.com/page"/></head>');
+  const { problems } = checkHtmlString(html);
+  assert.deepEqual(problems, []);
+});
+
+test('--check still FAILS on <link rel=stylesheet> to a remote host', () => {
+  // The other side of the rule above. Narrowing it must not blunt it.
+  const html = cleanHtml().replace(
+    '</head>',
+    '<link rel="stylesheet" href="https://cdn.example.com/x.css"/></head>',
+  );
+  const { problems } = checkHtmlString(html);
+  assert.ok(problems.some((p) => p.includes('remote resource')));
+});
+
 test('--check FAILS on a <script> tag', () => {
   const html = cleanHtml().replace('</body>', '<script>console.log(1)</script></body>');
   const { problems } = checkHtmlString(html);

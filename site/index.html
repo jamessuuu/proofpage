@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>proofpage: a receipts page that refuses to print a number it did not measure</title>
+<meta name="description" content="proofpage runs your repo's real test, typecheck, build and lint commands and turns the result into one self-contained HTML page. Every number names the command that produced it and the exit code it returned."/>
+<link rel="canonical" href="https://proofpage.vercel.app/"/>
+<meta property="og:title" content="proofpage"/>
+<meta property="og:description" content="A receipts page that refuses to print a number it did not measure."/>
+<meta property="og:type" content="website"/>
+<style>
+  /* One type scale, ratio 1.25. One accent. No webfonts, so the page fetches
+     nothing when it opens, which is the same claim the tool itself makes. */
+  :root {
+    --bg: #fbfaf7;
+    --panel: #ffffff;
+    --ink: #1a1a18;
+    --dim: #5c5b55;
+    --rule: #e2ded4;
+    --accent: #9a5b00;
+    --pass-bg: #eaf6ec; --pass-ink: #116329;
+    --fail-bg: #fdecec; --fail-ink: #8a1f1f;
+    --fs-meta: 0.8rem;
+    --fs-body: 1rem;
+    --fs-head: 1.25rem;
+    --fs-title: 1.5625rem;
+    --fs-hero: 1.953rem;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#16171a; --panel:#1d1f23; --ink:#eceae4; --dim:#a3a199; --rule:#2e3138; --accent:#e0a458; --pass-bg:#12291a; --pass-ink:#7fd39b; --fail-bg:#2b1717; --fail-ink:#f0908c; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: ui-serif, Georgia, "Times New Roman", serif;
+    font-size: var(--fs-body); line-height: 1.65;
+  }
+  code, pre, .mono { font-family: ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace; }
+  .wrap { max-width: 46rem; margin: 0 auto; padding: 4rem 1.25rem 5rem; }
+  header { border-bottom: 1px solid var(--rule); padding-bottom: 1.75rem; margin-bottom: 2.5rem; }
+  h1 { font-size: var(--fs-hero); line-height: 1.2; margin: 0 0 .5rem; letter-spacing: -0.01em; }
+  h2 { font-size: var(--fs-title); line-height: 1.25; margin: 3rem 0 .75rem; }
+  h3 { font-size: var(--fs-head); margin: 2rem 0 .5rem; }
+  .lede { font-size: var(--fs-head); color: var(--dim); margin: 0; }
+  .meta { font-size: var(--fs-meta); color: var(--dim); }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  pre {
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 6px;
+    padding: .9rem 1rem; overflow-x: auto; font-size: var(--fs-meta); line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+  .cta { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.75rem 0 0; }
+  .btn {
+    display: inline-block; padding: .55rem 1rem; border-radius: 6px;
+    border: 1px solid var(--rule); background: var(--panel); color: var(--ink);
+    text-decoration: none; font-size: var(--fs-meta);
+  }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  @media (prefers-color-scheme: dark) { .btn.primary { color: #16171a; } }
+  .rows { border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; margin: 1.25rem 0; }
+  .row { display: flex; gap: .75rem; align-items: baseline; padding: .7rem 1rem; border-top: 1px solid var(--rule); font-size: var(--fs-meta); }
+  .row:first-child { border-top: 0; }
+  .tag { font-size: var(--fs-meta); padding: .1rem .5rem; border-radius: 999px; white-space: nowrap; }
+  .tag.pass { background: var(--pass-bg); color: var(--pass-ink); }
+  .tag.fail { background: var(--fail-bg); color: var(--fail-ink); }
+  ul { padding-left: 1.15rem; }
+  li { margin: .4rem 0; }
+  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); font-size: var(--fs-meta); color: var(--dim); }
+  @media print { .cta, footer { display: none } body { background: #fff } }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+<header>
+  <h1>proofpage</h1>
+  <p class="lede">Runs your repo's real test, typecheck, build and lint commands, then turns the result into one self-contained HTML page. It refuses to print any number it did not measure.</p>
+  <div class="cta">
+    <a class="btn primary" href="./proof.html">See a real one</a>
+    <a class="btn" href="https://github.com/jamessuuu/proofpage">Source</a>
+  </div>
+  <p class="meta" style="margin-top:1rem">MIT. Zero dependencies. Node 22+.</p>
+</header>
+
+<h2>The first command in my README did not work, and 51 passing tests never noticed</h2>
+
+<p>proofpage shipped with 51 green tests. Its README opened with this:</p>
+
+<pre>proofpage --out examples/self-proof.html</pre>
+
+<p>A fresh install has no <code>examples/</code> directory, and proofpage does not create
+one. So the first command a new user copy-pasted died with <code>ENOENT</code>.</p>
+
+<p>Fifty-one tests could not catch it, and more tests in the same style never would
+have. They all run inside the repo, where <code>examples/</code> exists because it is
+committed. The bug lived in the gap between "works on the author's machine" and
+"works on a machine that just installed it".</p>
+
+<p>What caught it was a check that packs the tarball, installs it into a temp
+directory, and runs the README's first command there. It failed immediately.</p>
+
+<p>That is the whole idea behind this tool: <strong>a test suite is a closed world,
+and some claims are claims about the world outside it.</strong></p>
+
+<h2>What a page looks like</h2>
+
+<p>Every row is a command that actually ran, with the exit code it returned:</p>
+
+<div class="rows">
+  <div class="row"><span class="tag pass">exit 0</span> <code class="mono">npm test</code> <span class="meta">node:test summary parsed &mdash; 54 pass, 0 fail</span></div>
+  <div class="row"><span class="tag pass">exit 0</span> <code class="mono">node scripts/lint.mjs</code> <span class="meta">output shape unrecognised &mdash; marked <strong>unparsed</strong>, not scored</span></div>
+  <div class="row"><span class="tag fail">did not run</span> <code class="mono">npm run typecheck</code> <span class="meta">no such script &mdash; no number is printed for it</span></div>
+</div>
+
+<p>That second row is the point. proofpage parses <code>node:test</code> and
+<code>tsc</code> output because those shapes are unambiguous. It guesses at nothing
+else, so its own lint script renders as <em>unparsed</em> rather than being given a
+score it did not earn.</p>
+
+<h2>The honesty law</h2>
+
+<ul>
+  <li>A check that did not run shows no exit code and no count. Not <code>0</code> &mdash; nothing, with a line saying it did not run. <code>0</code> is a measurement, and printing it for "unknown" is the exact lie this tool exists to prevent.</li>
+  <li>Output that cannot be parsed with confidence is marked <code>unparsed</code>, with the reason.</li>
+  <li>If the working tree was dirty when the checks ran, the page says so next to the commit SHA. A receipt from an uncommitted tree is a receipt for code nobody else can check out.</li>
+  <li>If git is unavailable, the header says so rather than showing a fabricated commit.</li>
+</ul>
+
+<p>Each of those is a test, not a policy.</p>
+
+<h2>The page fetches nothing</h2>
+
+<p>Zero JavaScript, zero network requests, and every <code>&lt;details&gt;</code> is open
+by default, because a collapsed one is dropped entirely when the page is printed to
+PDF. A receipts page that silently loses its evidence when printed is worse than no
+receipts page.</p>
+
+<p><code>proofpage --check &lt;file&gt;</code> enforces all of that mechanically, on any
+page, including one you did not generate. Every rule has a fixture that violates
+exactly that rule and a test asserting the check fails on it.</p>
+
+<h2>Use it</h2>
+
+<pre>npx proofpage --out proof.html
+npx proofpage --check proof.html</pre>
+
+<p class="meta">Exit <code>0</code> everything passed &middot; <code>1</code> a check
+failed, which is the CI signal &middot; <code>2</code> used wrongly, so nothing was
+measured and nothing is claimed.</p>
+
+<h2>What it will not tell you</h2>
+
+<ul>
+  <li>Whether your tests are any good. A green proofpage page over a suite of empty tests is an honest report of a worthless suite.</li>
+  <li>Counts for anything other than <code>node:test</code> and <code>tsc</code>. Vitest, Jest and pytest shapes are not parsed yet.</li>
+  <li>Anything about a commit other than the one it measured. It is a snapshot, not a monitor, and it says which.</li>
+</ul>
+
+<footer>
+  <p>Built by <a href="https://agentjames.vercel.app/">James Lorenz Santos</a>.
+  Source at <a href="https://github.com/jamessuuu/proofpage">github.com/jamessuuu/proofpage</a>. MIT.</p>
+</footer>
+
+</main>
+</body>
+</html>

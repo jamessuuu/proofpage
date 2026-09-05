@@ -299,7 +299,20 @@ export function checkHtmlString(html) {
   // is for. The <a> is still held to the offline rule below: it may not be the
   // page's only evidence, because a reader offline must still see the numbers.
   const remoteSrc = [...html.matchAll(/\bsrc\s*=\s*"((?:https?:)?\/\/[^"]*)"/gi)].map((m) => m[1]);
-  const remoteLink = [...html.matchAll(/<link\b[^>]*\bhref\s*=\s*"((?:https?:)?\/\/[^"]*)"/gi)].map((m) => m[1]);
+  // Only <link> rels the browser actually FETCHES count. A canonical or an
+  // hreflang alternate is metadata: it issues no request, and flagging it
+  // would forbid a page from declaring its own canonical URL, which every
+  // indexable page should do. Caught by running this check against our own
+  // landing page on 2026-09-06, which declared rel=canonical and failed.
+  const FETCHING_RELS = /^(stylesheet|preload|prefetch|preconnect|dns-prefetch|modulepreload|icon|shortcut icon|apple-touch-icon|manifest)$/i;
+  const remoteLink = [...html.matchAll(/<link\b([^>]*)>/gi)]
+    .map((m) => m[1])
+    .filter((attrs) => {
+      const rel = (attrs.match(/\brel\s*=\s*"([^"]*)"/i) || [, ""])[1].trim();
+      return FETCHING_RELS.test(rel);
+    })
+    .map((attrs) => (attrs.match(/\bhref\s*=\s*"((?:https?:)?\/\/[^"]*)"/i) || [])[1])
+    .filter(Boolean);
   const remote = [...remoteSrc, ...remoteLink];
   if (remote.length) {
     problems.push(`remote resource referenced: ${[...new Set(remote)].join(', ')}`);
