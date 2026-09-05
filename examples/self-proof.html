@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>proofpage report</title>
+<style>
+:root{
+  --ink:#16191d; --muted:#5b6570; --rule:#dfe3e8; --bg:#fff;
+  --code-bg:#f6f7f9; --accent:#1f4b73;
+  --pass-bg:#eaf6ec; --pass-ink:#116329; --pass-rule:#9fd3ab;
+  --fail-bg:#fdecec; --fail-ink:#8a1f1f; --fail-rule:#eba3a3;
+  --err-bg:#fff6e5; --err-ink:#7a4b00; --err-rule:#f0cf8a;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  overflow-wrap:break-word;
+}
+.wrap{max-width:52rem;margin:0 auto;padding:3rem 1.25rem 5rem}
+h1{font-size:1.6rem;margin:0 0 .5em;letter-spacing:-.01em;font-weight:650}
+h2{font-size:1.05rem;margin:0;font-weight:650}
+p{margin:0 0 1em}
+code{
+  background:var(--code-bg);border:1px solid var(--rule);border-radius:3px;
+  padding:.08em .34em;font-size:.86em;
+  font-family:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  overflow-wrap:anywhere;word-break:break-word;
+}
+dl.meta-head{
+  margin:1.4rem 0 0;padding:1rem 1.15rem;border:1px solid var(--rule);
+  border-radius:6px;display:grid;grid-template-columns:max-content 1fr;
+  gap:.5rem 1.15rem;font-size:.92rem;
+}
+dl.meta-head dt{font-weight:640;color:var(--muted);white-space:nowrap}
+dl.meta-head dd{margin:0;overflow-wrap:anywhere}
+.banner{margin:1.1rem 0 0;padding:.75rem 1rem;border-radius:6px;font-size:.92rem;font-weight:600}
+.banner-warn{background:var(--err-bg);color:var(--err-ink);border:1px solid var(--err-rule)}
+.summary-line{margin:1.6rem 0 0;font-size:1rem}
+section.check{
+  margin:1.6rem 0 0;border:1px solid var(--rule);border-radius:8px;
+  padding:1rem 1.15rem;
+}
+section.check.status-pass{border-color:var(--pass-rule)}
+section.check.status-fail{border-color:var(--fail-rule)}
+section.check.status-errored{border-color:var(--err-rule)}
+.check-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.badge{
+  font-size:.75rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  padding:.25em .6em;border-radius:999px;white-space:nowrap;
+}
+.badge-pass{background:var(--pass-bg);color:var(--pass-ink)}
+.badge-fail{background:var(--fail-bg);color:var(--fail-ink)}
+.badge-errored{background:var(--err-bg);color:var(--err-ink)}
+dl.check-meta{
+  margin:.9rem 0 0;padding:0;display:grid;grid-template-columns:max-content 1fr;
+  gap:.4rem 1rem;font-size:.9rem;
+}
+dl.check-meta dt{font-weight:600;color:var(--muted);white-space:nowrap}
+dl.check-meta dd{margin:0;overflow-wrap:anywhere}
+details{margin:.9rem 0 0;border:1px solid var(--rule);border-radius:6px;background:var(--code-bg)}
+details>summary{
+  cursor:pointer;padding:.55rem .85rem;color:var(--muted);font-size:.83rem;
+  list-style:none;user-select:none;
+}
+details>summary::-webkit-details-marker{display:none}
+details>summary::before{content:"\25BE  ";display:inline-block}
+details>summary:hover{color:var(--ink)}
+details pre{
+  margin:0;border:0;border-top:1px solid var(--rule);padding:.85rem 1rem;
+  font:.8rem/1.5 ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  white-space:pre-wrap;overflow-wrap:anywhere;tab-size:2;
+}
+footer.meta{margin-top:3rem;padding-top:1.1rem;border-top:1px solid var(--rule);
+  color:var(--muted);font-size:.82rem}
+@media(max-width:640px){
+  .wrap{padding:2rem 1rem 4rem}
+  h1{font-size:1.35rem}
+  dl.meta-head,dl.check-meta{grid-template-columns:1fr;gap:0}
+  dl.meta-head dt,dl.check-meta dt{margin-top:.5rem}
+  dl.meta-head dt:first-child,dl.check-meta dt:first-child{margin-top:0}
+}
+@media print{
+  .wrap{max-width:none;padding:0}
+  section.check,details{page-break-inside:avoid}
+  details>summary{display:none}
+  details>*{display:block !important}
+  h2{page-break-after:avoid}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1>proofpage report</h1>
+<dl class="meta-head"><dt>commit</dt><dd><code>5680ae391a432c4ba8753c4b0f820c34ab12120e</code></dd><dt>branch</dt><dd>main</dd><dt>working tree</dt><dd>clean</dd><dt>node</dt><dd>v24.15.0</dd><dt>platform</dt><dd>win32 x64 (10.0.26200)</dd><dt>measured at</dt><dd>2026-09-05T11:31:30.745Z (UTC)</dd><dt>checks discovered via</dt><dd>auto-detected from package.json scripts</dd></dl>
+
+<p class="summary-line"><strong>2 of 2</strong> checks passed.</p>
+<section class="check status-pass">
+<div class="check-head"><h2>test</h2><span class="badge badge-pass">PASS</span></div>
+<dl class="check-meta"><dt>command</dt><dd><code>npm run test</code></dd><dt>exit code</dt><dd>0</dd><dt>duration</dt><dd>8.69s</dd><dt>measured at</dt><dd>2026-09-05T11:31:30.814Z (UTC)</dd><dt>discovered via</dt><dd>auto-detected from package.json</dd><dt>parsed result</dt><dd>node:test summary - pass 50, fail 0, total 50</dd></dl>
+<details open><summary>output (last 40 of 63 lines, truncated)</summary><pre>✔ --check FAILS when there is no print stylesheet (0.2044ms)
+✔ --check FAILS on unbalanced &lt;details&gt; (0.2017ms)
+✔ --check FAILS on unbalanced &lt;pre&gt; (0.1945ms)
+✔ --check FAILS on a collapsed &lt;details&gt; (missing the open attribute) (0.229ms)
+✔ --check FAILS on a credential-shaped string (0.2411ms)
+✔ --check FAILS on missing doctype (0.1909ms)
+✔ renderProof output always passes --check (the renderer only ever produces honest HTML) (0.6678ms)
+✔ a check that did not run shows no exit code number and no parsed count (0.2628ms)
+✔ a check with unparseable output renders "unparsed" and the reason, never a fabricated 0 (1.0887ms)
+✔ a dirty working tree surfaces a visible warning (0.2332ms)
+✔ when git is unavailable, the header says so rather than showing a fabricated commit (0.1229ms)
+✔ renderProof redacts a credential-shaped string even if it arrives already embedded in proof data (defense in depth) (0.317ms)
+✔ discoverChecks reads proofpage.json when present, and marks entries as not auto (1.8741ms)
+✔ discoverChecks auto-detects from package.json scripts when there is no proofpage.json (3.9217ms)
+✔ discoverChecks reports "none" when there is nothing to discover (1.2149ms)
+✔ runOneCheck actually executes the command and captures a real passing exit code (587.2958ms)
+✔ runOneCheck actually executes the command and captures a real non-zero exit code (590.6307ms)
+✔ runOneCheck parses a real node:test summary from a real `node --test` run (648.0746ms)
+✔ runOneCheck records unparsed, never a fabricated count, when the output shape is unknown (92.7775ms)
+✔ runOneCheck marks a check that could not be spawned as ran:false, never as a fake pass (1.0792ms)
+✔ runOneCheck strips NODE_TEST_CONTEXT so a nested `node --test` check is never silently skipped by node's own recursion guard (685.7483ms)
+✔ runOneCheck redacts credential-shaped strings from captured output before they reach proof.json (93.4953ms)
+✔ parseOutput reads a real tsc-shaped "Found N errors" line (0.1875ms)
+✔ parseOutput also recognizes the classic TAP-reporter shape ("# pass N" / "# fail N") (0.2393ms)
+✔ parseOutput handles the singular "Found 1 error." form (0.0905ms)
+✔ parseOutput does not guess a count when nothing matches a known shape (0.0839ms)
+✔ getGitInfo reports available:false outside of any git repository (20.3421ms)
+✔ getGitInfo detects a dirty working tree honestly, against a real isolated git repo (367.8512ms)
+✔ run() writes proof.json to disk and computes a real summary from real exit codes (460.1963ms)
+✔ run() against the fixture repo computes an honest summary across pass/fail/parsed/unparsed checks (1996.3809ms)
+✔ run() records env and git fields without fabricating them (2091.8743ms)
+ℹ tests 50
+ℹ suites 0
+ℹ pass 50
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8041.1548
+</pre></details>
+</section>
+<section class="check status-pass">
+<div class="check-head"><h2>lint</h2><span class="badge badge-pass">PASS</span></div>
+<dl class="check-meta"><dt>command</dt><dd><code>npm run lint</code></dd><dt>exit code</dt><dd>0</dd><dt>duration</dt><dd>1.29s</dd><dt>measured at</dt><dd>2026-09-05T11:31:39.508Z (UTC)</dd><dt>discovered via</dt><dd>auto-detected from package.json</dd><dt>parsed result</dt><dd>unparsed - output did not match a known shape (node:test summary or tsc "Found N errors")</dd></dl>
+<details open><summary>output (6 lines)</summary><pre>
+&gt; proofpage@0.1.0 lint
+&gt; node scripts/lint.mjs
+
+10/10 file(s) passed syntax check
+</pre></details>
+</section>
+<footer class="meta">Generated by proofpage. Every number above traces to a command that actually ran; a row that could not run or could not be parsed says so instead of showing a number.</footer>
+</main>
+</body>
+</html>
