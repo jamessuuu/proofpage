@@ -1,0 +1,9 @@
+{
+  "checks": [
+    { "name": "pass", "command": "npm run pass" },
+    { "name": "fail", "command": "npm run fail" },
+    { "name": "unittest", "command": "npm run unittest" },
+    { "name": "fake-tsc-shaped-output", "command": "node -e \"console.log('Found 3 errors.')\"" },
+    { "name": "unparseable", "command": "node -e \"console.log('nothing recognizable here')\"" }
+  ]
+}

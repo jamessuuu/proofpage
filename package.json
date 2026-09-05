@@ -1,0 +1,32 @@
+{
+  "name": "proofpage",
+  "version": "0.1.0",
+  "description": "Turn a repo's real test/typecheck/build/lint run into a verifiable receipts page. Refuses to print any number it did not measure.",
+  "type": "module",
+  "bin": {
+    "proofpage": "./bin/proofpage.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test tests/cli.test.mjs tests/redact.test.mjs tests/render.test.mjs tests/run.test.mjs",
+    "lint": "node scripts/lint.mjs"
+  },
+  "license": "MIT",
+  "author": "James Lorenz Santos",
+  "keywords": [
+    "ci",
+    "proof",
+    "receipts",
+    "testing",
+    "verification",
+    "honesty"
+  ]
+}

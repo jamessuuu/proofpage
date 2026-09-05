@@ -1,0 +1,10 @@
+{
+  "name": "proofpage-fixture",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "pass": "node -e \"process.exit(0)\"",
+    "fail": "node -e \"process.exit(1)\"",
+    "unittest": "node --test node-test-fixture/*.mjs"
+  }
+}
