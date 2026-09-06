@@ -51,7 +51,7 @@ test('hostile: --check against a nonexistent file produces a stated error and ex
     assert.equal(code, 2);
     assert.match(stderr, /usage: proofpage --check/);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -62,7 +62,7 @@ test('hostile: `render` with no proof.json in cwd produces a stated error and ex
     assert.equal(code, 2);
     assert.match(stderr, /no proof\.json found/);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -77,7 +77,7 @@ test('hostile: a malformed proofpage.json produces a stated error and exit 2, no
     assert.match(stderr, /error: proofpage\.json is not valid JSON/);
     assert.doesNotMatch(stderr, /at discoverChecks/); // no stack trace leaked to the user
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -89,7 +89,7 @@ test('hostile: a proofpage.json with no usable "checks" array produces a stated 
     assert.equal(code, 2);
     assert.match(stderr, /error: proofpage\.json has no "checks" array/);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -101,7 +101,7 @@ test('hostile: a malformed proof.json fed to `render` produces a stated error an
     assert.equal(code, 2);
     assert.match(stderr, /error: proof\.json is not valid JSON/);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -115,7 +115,7 @@ test('hostile: an empty (0-byte) proofpage.json produces a stated error and exit
     assert.equal(code, 2);
     assert.match(stderr, /error: proofpage\.json is not valid JSON/);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -126,7 +126,7 @@ test('hostile: an empty (0-byte) package.json is not an error -- 0 checks discov
     const { code } = await inDir(dir, () => withCapturedOutput(() => main([])));
     assert.equal(code, 0);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -151,7 +151,7 @@ test('hostile: a check whose output exceeds the spawn maxBuffer is recorded as "
     assert.equal(proof.checks[0].ran, false);
     assert.ok(proof.checks[0].spawnError);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -170,7 +170,7 @@ test('hostile: `--check` on a large (multi-megabyte) HTML file completes and rep
     assert.equal(code, 1); // missing viewport meta etc. -- a real, reported problem
     assert.match(stdout, /WARN\s+large file/);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -185,7 +185,7 @@ test('hostile: --check against a directory produces a stated error and exit 2, n
     assert.equal(code, 2);
     assert.match(stderr, /error: not a file/);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
 
@@ -197,6 +197,6 @@ test('hostile: `render` when proof.json is actually a directory produces a state
     assert.equal(code, 2);
     assert.match(stderr, /error: not a file/);
   } finally {
-    rmSync(dir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
   }
 });
