@@ -15,7 +15,7 @@
 //   * the honesty law: every number traces to a command that ran. A check
 //     that did not run says so; a count that couldn't be parsed says
 //     "unparsed" and why. Never a 0 standing in for "unknown".
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -372,7 +372,15 @@ export function checkHtmlString(html) {
  * @returns {number}
  */
 export function checkFile(filePath) {
-  const html = readFileSync(filePath, 'utf8');
+  let html;
+  try {
+    html = readFileSync(filePath, 'utf8');
+  } catch (e) {
+    // A directory, a permission-denied file, or any other unreadable path:
+    // say so and let the caller turn it into a non-zero exit, rather than
+    // letting a raw fs error propagate as a stack trace.
+    throw new Error(`could not read ${filePath}: ${(e && e.message) || e}`);
+  }
   const { problems, warnings } = checkHtmlString(html);
   for (const p of problems) process.stdout.write(`FAIL  ${p}\n`);
   for (const w of warnings) process.stdout.write(`WARN  ${w}\n`);
@@ -395,7 +403,16 @@ if (isMain) {
       process.stderr.write('usage: render.mjs --check <file.html>\n');
       process.exit(2);
     }
-    process.exit(checkFile(f));
+    if (!statSync(f).isFile()) {
+      process.stderr.write(`error: not a file: ${f}\n`);
+      process.exit(2);
+    }
+    try {
+      process.exit(checkFile(f));
+    } catch (e) {
+      process.stderr.write(`error: ${(e && e.message) || e}\n`);
+      process.exit(2);
+    }
   }
   process.stderr.write('usage: render.mjs --check <file.html>\n');
   process.exit(2);

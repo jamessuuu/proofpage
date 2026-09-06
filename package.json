@@ -16,7 +16,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "node --test tests/cli.test.mjs tests/redact.test.mjs tests/render.test.mjs tests/run.test.mjs",
+    "test": "node --test tests/cli.test.mjs tests/hostile.test.mjs tests/redact.test.mjs tests/render.test.mjs tests/run.test.mjs",
     "lint": "node scripts/lint.mjs"
   },
   "license": "MIT",
