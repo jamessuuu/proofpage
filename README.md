@@ -104,7 +104,7 @@ PASS  no remote resources, no JS, no collapsed evidence, print-ready, no credent
 ```
 
 `proof.json`'s `checks` array for that run records `test` as
-`node:test: pass 67, fail 0, total 67` and `lint` as `exit 0` (its output does
+`node:test: pass 66, fail 0, total 66` and `lint` as `exit 0` (its output does
 not match either of the two shapes proofpage parses with confidence, so it is
 rendered as "unparsed", honestly, rather than guessed at).
 

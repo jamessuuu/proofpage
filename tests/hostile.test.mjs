@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { main } from '../bin/proofpage.mjs';
 
@@ -51,7 +51,7 @@ test('hostile: --check against a nonexistent file produces a stated error and ex
     assert.equal(code, 2);
     assert.match(stderr, /usage: proofpage --check/);
   } finally {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 25, retryDelay: 200 });
   }
 });
 
@@ -62,7 +62,7 @@ test('hostile: `render` with no proof.json in cwd produces a stated error and ex
     assert.equal(code, 2);
     assert.match(stderr, /no proof\.json found/);
   } finally {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 25, retryDelay: 200 });
   }
 });
 
@@ -77,7 +77,7 @@ test('hostile: a malformed proofpage.json produces a stated error and exit 2, no
     assert.match(stderr, /error: proofpage\.json is not valid JSON/);
     assert.doesNotMatch(stderr, /at discoverChecks/); // no stack trace leaked to the user
   } finally {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 25, retryDelay: 200 });
   }
 });
 
@@ -89,7 +89,7 @@ test('hostile: a proofpage.json with no usable "checks" array produces a stated 
     assert.equal(code, 2);
     assert.match(stderr, /error: proofpage\.json has no "checks" array/);
   } finally {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 25, retryDelay: 200 });
   }
 });
 
@@ -101,7 +101,7 @@ test('hostile: a malformed proof.json fed to `render` produces a stated error an
     assert.equal(code, 2);
     assert.match(stderr, /error: proof\.json is not valid JSON/);
   } finally {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 25, retryDelay: 200 });
   }
 });
 
@@ -115,7 +115,7 @@ test('hostile: an empty (0-byte) proofpage.json produces a stated error and exit
     assert.equal(code, 2);
     assert.match(stderr, /error: proofpage\.json is not valid JSON/);
   } finally {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 25, retryDelay: 200 });
   }
 });
 
@@ -126,34 +126,25 @@ test('hostile: an empty (0-byte) package.json is not an error -- 0 checks discov
     const { code } = await inDir(dir, () => withCapturedOutput(() => main([])));
     assert.equal(code, 0);
   } finally {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 25, retryDelay: 200 });
   }
 });
 
 // --- 4. a file far larger than expected ----------------------------------------
-
-test('hostile: a check whose output exceeds the spawn maxBuffer is recorded as "did not run", never a crash', async () => {
-  // Regression guard for a real risk in runOneCheck: spawnSync's maxBuffer is
-  // fixed at 64MB. A check that floods stdout past that must surface as a
-  // measured "did not run" (ENOBUFS), never an uncaught exception.
-  const dir = tempDir();
-  try {
-    const bigOutputCmd =
-      'node -e "const s=\'x\'.repeat(1024*1024); for(let i=0;i<80;i++) process.stdout.write(s);"';
-    writeFileSync(
-      path.join(dir, 'package.json'),
-      JSON.stringify({ name: 'x', scripts: { test: bigOutputCmd } }),
-      'utf8',
-    );
-    const { code } = await inDir(dir, () => withCapturedOutput(() => main(['run'])));
-    assert.equal(code, 1); // measured, and it did not run cleanly -- not a crash
-    const proof = JSON.parse(readFileSync(path.join(dir, 'proof.json'), 'utf8'));
-    assert.equal(proof.checks[0].ran, false);
-    assert.ok(proof.checks[0].spawnError);
-  } finally {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
-  }
-});
+//
+// A real repro of a check exceeding spawnSync's 64MB maxBuffer (runOneCheck's
+// `if (result.error)` branch) was tried here first and dropped: on Windows,
+// killing the direct `shell: true` child (cmd.exe) does not reliably kill the
+// grandchild node process it spawns, which can be left blocked mid-write with
+// the temp dir as its cwd -- an orphan that then makes the temp dir
+// undeletable (a real EPERM seen while stress-testing this file, roughly 1
+// run in 5-10, that no retry budget fixed because the lock does not clear on
+// its own). That exact code path is already covered safely at the unit level
+// in tests/run.test.mjs ("runOneCheck marks a check that could not be spawned
+// as ran:false, never as a fake pass", via a nonexistent cwd -- a trigger
+// that fails before any subprocess exists to orphan). This file instead
+// covers the "large input" hostile case that is safely reachable through the
+// CLI itself: a multi-megabyte file handed to --check.
 
 test('hostile: `--check` on a large (multi-megabyte) HTML file completes and reports a size warning, not a crash', async () => {
   const dir = tempDir();
@@ -170,7 +161,7 @@ test('hostile: `--check` on a large (multi-megabyte) HTML file completes and rep
     assert.equal(code, 1); // missing viewport meta etc. -- a real, reported problem
     assert.match(stdout, /WARN\s+large file/);
   } finally {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 25, retryDelay: 200 });
   }
 });
 
@@ -185,7 +176,7 @@ test('hostile: --check against a directory produces a stated error and exit 2, n
     assert.equal(code, 2);
     assert.match(stderr, /error: not a file/);
   } finally {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 25, retryDelay: 200 });
   }
 });
 
@@ -197,6 +188,6 @@ test('hostile: `render` when proof.json is actually a directory produces a state
     assert.equal(code, 2);
     assert.match(stderr, /error: not a file/);
   } finally {
-    rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    rmSync(dir, { recursive: true, force: true, maxRetries: 25, retryDelay: 200 });
   }
 });

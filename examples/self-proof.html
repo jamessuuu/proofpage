@@ -94,56 +94,56 @@ footer.meta{margin-top:3rem;padding-top:1.1rem;border-top:1px solid var(--rule);
 <body>
 <main class="wrap">
 <h1>proofpage report</h1>
-<dl class="meta-head"><dt>commit</dt><dd><code>be9ef52d59cade8da5d8e1a168f1861227b292c0</code></dd><dt>branch</dt><dd>main</dd><dt>working tree</dt><dd>DIRTY - uncommitted changes were present when these checks ran</dd><dt>node</dt><dd>v24.15.0</dd><dt>platform</dt><dd>win32 x64 (10.0.26200)</dd><dt>measured at</dt><dd>2026-09-06T05:40:07.825Z (UTC)</dd><dt>checks discovered via</dt><dd>auto-detected from package.json scripts</dd></dl>
+<dl class="meta-head"><dt>commit</dt><dd><code>a56fc4db5624273139593b514e1aa1aed6a876c5</code></dd><dt>branch</dt><dd>main</dd><dt>working tree</dt><dd>DIRTY - uncommitted changes were present when these checks ran</dd><dt>node</dt><dd>v24.15.0</dd><dt>platform</dt><dd>win32 x64 (10.0.26200)</dd><dt>measured at</dt><dd>2026-09-06T05:51:17.244Z (UTC)</dd><dt>checks discovered via</dt><dd>auto-detected from package.json scripts</dd></dl>
 <p class="banner banner-warn">Working tree was DIRTY when these checks ran. Uncommitted changes may not be reflected in the commit shown above.</p>
 <p class="summary-line"><strong>2 of 2</strong> checks passed.</p>
 <section class="check status-pass">
 <div class="check-head"><h2>test</h2><span class="badge badge-pass">PASS</span></div>
-<dl class="check-meta"><dt>command</dt><dd><code>npm run test</code></dd><dt>exit code</dt><dd>0</dd><dt>duration</dt><dd>5.01s</dd><dt>measured at</dt><dd>2026-09-06T05:40:07.884Z (UTC)</dd><dt>discovered via</dt><dd>auto-detected from package.json</dd><dt>parsed result</dt><dd>node:test summary - pass 67, fail 0, total 67</dd></dl>
-<details open><summary>output (last 40 of 80 lines, truncated)</summary><pre>✔ --check FAILS when there is no print stylesheet (0.1395ms)
-✔ --check FAILS on unbalanced &lt;details&gt; (0.2018ms)
-✔ --check FAILS on unbalanced &lt;pre&gt; (0.1453ms)
-✔ --check FAILS on a collapsed &lt;details&gt; (missing the open attribute) (0.1169ms)
-✔ --check FAILS on a credential-shaped string (0.0808ms)
-✔ --check FAILS on missing doctype (0.891ms)
-✔ renderProof output always passes --check (the renderer only ever produces honest HTML) (0.9328ms)
-✔ a check that did not run shows no exit code number and no parsed count (0.3617ms)
-✔ a check with unparseable output renders "unparsed" and the reason, never a fabricated 0 (0.2744ms)
-✔ a dirty working tree surfaces a visible warning (0.4268ms)
-✔ when git is unavailable, the header says so rather than showing a fabricated commit (0.1864ms)
-✔ renderProof redacts a credential-shaped string even if it arrives already embedded in proof data (defense in depth) (0.4014ms)
-✔ discoverChecks reads proofpage.json when present, and marks entries as not auto (2.3772ms)
-✔ discoverChecks auto-detects from package.json scripts when there is no proofpage.json (2.864ms)
-✔ discoverChecks reports "none" when there is nothing to discover (1.0007ms)
-✔ runOneCheck actually executes the command and captures a real passing exit code (401.159ms)
-✔ runOneCheck actually executes the command and captures a real non-zero exit code (333.808ms)
-✔ runOneCheck parses a real node:test summary from a real `node --test` run (383.0885ms)
-✔ runOneCheck records unparsed, never a fabricated count, when the output shape is unknown (54.7657ms)
-✔ runOneCheck marks a check that could not be spawned as ran:false, never as a fake pass (1.0286ms)
-✔ runOneCheck strips NODE_TEST_CONTEXT so a nested `node --test` check is never silently skipped by node's own recursion guard (403.9166ms)
-✔ runOneCheck redacts credential-shaped strings from captured output before they reach proof.json (59.4831ms)
-✔ parseOutput reads a real tsc-shaped "Found N errors" line (0.2075ms)
-✔ parseOutput also recognizes the classic TAP-reporter shape ("# pass N" / "# fail N") (0.2405ms)
-✔ parseOutput handles the singular "Found 1 error." form (0.0884ms)
-✔ parseOutput does not guess a count when nothing matches a known shape (0.0941ms)
-✔ getGitInfo reports available:false outside of any git repository (19.5522ms)
-✔ getGitInfo detects a dirty working tree honestly, against a real isolated git repo (282.0721ms)
-✔ run() writes proof.json to disk and computes a real summary from real exit codes (343.8449ms)
-✔ run() against the fixture repo computes an honest summary across pass/fail/parsed/unparsed checks (1181.2591ms)
-✔ run() records env and git fields without fabricating them (1093.9248ms)
-ℹ tests 67
+<dl class="check-meta"><dt>command</dt><dd><code>npm run test</code></dd><dt>exit code</dt><dd>0</dd><dt>duration</dt><dd>5.69s</dd><dt>measured at</dt><dd>2026-09-06T05:51:17.306Z (UTC)</dd><dt>discovered via</dt><dd>auto-detected from package.json</dd><dt>parsed result</dt><dd>node:test summary - pass 66, fail 0, total 66</dd></dl>
+<details open><summary>output (last 40 of 79 lines, truncated)</summary><pre>✔ --check FAILS when there is no print stylesheet (0.2193ms)
+✔ --check FAILS on unbalanced &lt;details&gt; (0.2512ms)
+✔ --check FAILS on unbalanced &lt;pre&gt; (0.2389ms)
+✔ --check FAILS on a collapsed &lt;details&gt; (missing the open attribute) (0.2437ms)
+✔ --check FAILS on a credential-shaped string (0.1432ms)
+✔ --check FAILS on missing doctype (0.1937ms)
+✔ renderProof output always passes --check (the renderer only ever produces honest HTML) (0.9089ms)
+✔ a check that did not run shows no exit code number and no parsed count (0.3095ms)
+✔ a check with unparseable output renders "unparsed" and the reason, never a fabricated 0 (0.382ms)
+✔ a dirty working tree surfaces a visible warning (0.3459ms)
+✔ when git is unavailable, the header says so rather than showing a fabricated commit (0.1683ms)
+✔ renderProof redacts a credential-shaped string even if it arrives already embedded in proof data (defense in depth) (0.5263ms)
+✔ discoverChecks reads proofpage.json when present, and marks entries as not auto (11.6522ms)
+✔ discoverChecks auto-detects from package.json scripts when there is no proofpage.json (4.4626ms)
+✔ discoverChecks reports "none" when there is nothing to discover (1.1995ms)
+✔ runOneCheck actually executes the command and captures a real passing exit code (432.4524ms)
+✔ runOneCheck actually executes the command and captures a real non-zero exit code (376.6955ms)
+✔ runOneCheck parses a real node:test summary from a real `node --test` run (439.3241ms)
+✔ runOneCheck records unparsed, never a fabricated count, when the output shape is unknown (58.7725ms)
+✔ runOneCheck marks a check that could not be spawned as ran:false, never as a fake pass (0.9632ms)
+✔ runOneCheck strips NODE_TEST_CONTEXT so a nested `node --test` check is never silently skipped by node's own recursion guard (409.6361ms)
+✔ runOneCheck redacts credential-shaped strings from captured output before they reach proof.json (62.5072ms)
+✔ parseOutput reads a real tsc-shaped "Found N errors" line (0.1467ms)
+✔ parseOutput also recognizes the classic TAP-reporter shape ("# pass N" / "# fail N") (0.176ms)
+✔ parseOutput handles the singular "Found 1 error." form (0.0442ms)
+✔ parseOutput does not guess a count when nothing matches a known shape (0.0797ms)
+✔ getGitInfo reports available:false outside of any git repository (18.2897ms)
+✔ getGitInfo detects a dirty working tree honestly, against a real isolated git repo (292.8155ms)
+✔ run() writes proof.json to disk and computes a real summary from real exit codes (369.2202ms)
+✔ run() against the fixture repo computes an honest summary across pass/fail/parsed/unparsed checks (1302.3615ms)
+✔ run() records env and git fields without fabricating them (1254.9163ms)
+ℹ tests 66
 ℹ suites 0
-ℹ pass 67
+ℹ pass 66
 ℹ fail 0
 ℹ cancelled 0
 ℹ skipped 0
 ℹ todo 0
-ℹ duration_ms 4687.0511
+ℹ duration_ms 5171.7825
 </pre></details>
 </section>
 <section class="check status-pass">
 <div class="check-head"><h2>lint</h2><span class="badge badge-pass">PASS</span></div>
-<dl class="check-meta"><dt>command</dt><dd><code>npm run lint</code></dd><dt>exit code</dt><dd>0</dd><dt>duration</dt><dd>665ms</dd><dt>measured at</dt><dd>2026-09-06T05:40:12.898Z (UTC)</dd><dt>discovered via</dt><dd>auto-detected from package.json</dd><dt>parsed result</dt><dd>unparsed - output did not match a known shape (node:test summary or tsc "Found N errors")</dd></dl>
+<dl class="check-meta"><dt>command</dt><dd><code>npm run lint</code></dd><dt>exit code</dt><dd>0</dd><dt>duration</dt><dd>738ms</dd><dt>measured at</dt><dd>2026-09-06T05:51:22.998Z (UTC)</dd><dt>discovered via</dt><dd>auto-detected from package.json</dd><dt>parsed result</dt><dd>unparsed - output did not match a known shape (node:test summary or tsc "Found N errors")</dd></dl>
 <details open><summary>output (6 lines)</summary><pre>
 &gt; proofpage@0.1.0 lint
 &gt; node scripts/lint.mjs

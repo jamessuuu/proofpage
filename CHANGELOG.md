@@ -28,12 +28,17 @@ Release-grade hardening pass: hostile input, CI, and reproducibility.
   commit's test count; regenerated against the current suite.
 
 ### Added
-- `tests/hostile.test.mjs`: 11 tests pinning the fixes above by feeding the
+- `tests/hostile.test.mjs`: 10 tests pinning the fixes above by feeding the
   real bad input and asserting the stated error and exit code, per R6 of the
-  release standard -- not by a `try/catch` that merely swallows. Includes a
-  regression guard for a check whose output exceeds `spawnSync`'s 64MB
-  `maxBuffer` (confirmed already handled correctly: recorded as "did not
-  run", not a crash) and for `--check` against a multi-megabyte HTML file.
+  release standard -- not by a `try/catch` that merely swallows. Includes
+  `--check` against a multi-megabyte HTML file for the "file far larger than
+  expected" case. (A check whose output floods past `spawnSync`'s 64MB
+  `maxBuffer` was tried here too and dropped: real, repeated stress-testing
+  on Windows showed it can orphan the grandchild process `shell: true`
+  spawns, which then holds its temp-dir cwd open indefinitely. That code
+  path -- `runOneCheck`'s `result.error` handling -- was already covered
+  safely at the unit level in `tests/run.test.mjs`, via a nonexistent `cwd`
+  that fails before any subprocess exists to orphan.)
 - `.github/workflows/ci.yml`: installs from the committed lockfile on a
   pinned Node version and runs `npm test` and `npm run lint`.
 - `package-lock.json`, committed for the first time.
