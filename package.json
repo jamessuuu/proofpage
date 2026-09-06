@@ -17,7 +17,8 @@
   },
   "scripts": {
     "test": "node --test tests/cli.test.mjs tests/hostile.test.mjs tests/redact.test.mjs tests/render.test.mjs tests/run.test.mjs",
-    "lint": "node scripts/lint.mjs"
+    "lint": "node scripts/lint.mjs",
+    "demo": "node bin/proofpage.mjs --out proof.html && node bin/proofpage.mjs --check proof.html"
   },
   "license": "MIT",
   "author": "James Lorenz Santos",
