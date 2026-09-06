@@ -1,9 +1,9 @@
 # proofpage
 
-`npx proofpage` runs your repo's real test, typecheck, build, and lint
-commands and turns the result into one self-contained HTML page. Every
-number on that page traces back to a command that actually ran and the exit
-code it actually returned.
+proofpage runs your repo's real test, typecheck, build, and lint commands and
+turns the result into one self-contained HTML page. Every number on that page
+traces back to a command that actually ran and the exit code it actually
+returned.
 
 ## The honesty law
 
@@ -24,6 +24,11 @@ Run `proofpage --check <file>` against any rendered page (including one you
 didn't generate yourself) to verify these rules mechanically instead of
 trusting them.
 
+A static landing page describing the tool is live at
+[proofpage-green.vercel.app](https://proofpage-green.vercel.app/) (source:
+[`site/`](site/)) -- it is marketing copy, not the tool itself. The actual
+demo is the worked example below, which you run yourself.
+
 "Zero network requests" means the page fetches nothing when it opens: no
 remote stylesheet, script, font or image. A plain `<a href>` out to the commit
 or the repo is allowed, because it requests nothing until somebody clicks it,
@@ -32,9 +37,20 @@ worse at its only job.
 
 ## Install
 
-    npm install --save-dev proofpage
-    # or run it without installing:
-    npx proofpage
+Not on the npm registry yet -- clone and run it directly. There are zero
+runtime dependencies, so `npm install` only sets up the dev/test tooling.
+
+```sh
+git clone https://github.com/jamessuuu/proofpage.git
+cd proofpage
+npm install
+node bin/proofpage.mjs --out proof.html
+node bin/proofpage.mjs --check proof.html
+```
+
+If you `npm link` it (or it later gets published), the same commands are
+available as a bare `proofpage` binary -- that form is what the rest of this
+README shows, since it reads the same either way.
 
 ## Usage
 
@@ -75,28 +91,30 @@ browser, or print it. Nothing is fetched when it loads, so it works offline
 and survives a PDF. Every row traces to a command you can rerun yourself:
 
     npm test
-    node scripts/lint.mjs
+    npm run lint
 
-In any repo that has proofpage installed, the whole thing is two commands:
+Run from a clone of this repo (`node bin/proofpage.mjs --out proof.html`),
+this is the real terminal output, not a mock-up:
 
-```sh
-proofpage --out proof.html
-proofpage --check proof.html
+```
+$ node bin/proofpage.mjs --out proof.html
+wrote proof.json and proof.html - 2/2 checks passed
+$ node bin/proofpage.mjs --check proof.html
+PASS  no remote resources, no JS, no collapsed evidence, print-ready, no credential-shaped strings.
 ```
 
-That writes into the current directory, which always exists. Point `--out` at a
-subdirectory only if you have already made it: proofpage will not create one
-for you, and until 2026-09-05 this section told you to write into `examples/`,
-which fails with ENOENT on a fresh install. CL6 in the harness caught it by
-running this snippet against the packed tarball, which is the entire reason
-that check exists.
+`proof.json`'s `checks` array for that run records `test` as
+`node:test: pass 67, fail 0, total 67` and `lint` as `exit 0` (its output does
+not match either of the two shapes proofpage parses with confidence, so it is
+rendered as "unparsed", honestly, rather than guessed at).
 
-From a clone of this repo, without installing, the same two steps are:
-
-```sh
-node bin/proofpage.mjs --out proof.html
-node bin/proofpage.mjs --check proof.html
-```
+Once it is `npm link`ed (or published), the same two steps are just
+`proofpage --out proof.html` / `proofpage --check proof.html`. Either way it
+writes into the current directory, which always exists -- point `--out` at a
+subdirectory only if you have already made it, since proofpage will not
+create one for you (until 2026-09-05 this section told you to write into
+`examples/`, which fails with ENOENT on a fresh install; CL6 in the harness
+caught it by running this snippet against the packed tarball).
 
 ## Exit codes
 
