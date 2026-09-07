@@ -3,179 +3,642 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>proofpage: a receipts page that refuses to print a number it did not measure</title>
+<title>proofpage — a receipts page that refuses to print a number it did not measure</title>
 <meta name="description" content="proofpage runs your repo's real test, typecheck, build and lint commands and turns the result into one self-contained HTML page. Every number names the command that produced it and the exit code it returned."/>
 <link rel="canonical" href="https://proofpage-green.vercel.app/"/>
 <meta property="og:title" content="proofpage"/>
 <meta property="og:description" content="A receipts page that refuses to print a number it did not measure."/>
 <meta property="og:type" content="website"/>
+<meta name="theme-color" content="#0d1014"/>
 <style>
-  /* One type scale, ratio 1.25. One accent. No webfonts, so the page fetches
-     nothing when it opens, which is the same claim the tool itself makes. */
-  :root {
-    --bg: #fbfaf7;
-    --panel: #ffffff;
-    --ink: #1a1a18;
-    --dim: #5c5b55;
-    --rule: #e2ded4;
-    --accent: #9a5b00;
-    --pass-bg: #eaf6ec; --pass-ink: #116329;
-    --fail-bg: #fdecec; --fail-ink: #8a1f1f;
-    --fs-meta: 0.8rem;
-    --fs-body: 1rem;
-    --fs-head: 1.25rem;
-    --fs-title: 1.5625rem;
-    --fs-hero: 1.953rem;
+/* =====================================================================
+   proofpage — product surface, dusk lighting.
+   Derived from ~/.claude/harness-dist/substrate/substrate.css §12:
+   elevation ladder, 10px structure radius, one easing curve, two
+   durations, an ambient wash tinted by the signal hue, all motion off
+   under prefers-reduced-motion.
+   Zero JavaScript and zero network requests, which is the same claim the
+   tool itself makes — so this page is styled entirely with CSS that the
+   page's own CSP (default-src 'none') permits.
+   ===================================================================== */
+
+:root {
+  color-scheme: dark;
+
+  /* Substrate ladder — value steps, not borders, carry the depth. */
+  --sub-0: oklch(0.145 0.014 258);
+  --sub-1: oklch(0.185 0.014 258);
+  --sub-2: oklch(0.225 0.014 258);
+  --sub-3: oklch(0.265 0.013 258);
+  --edge-lo: oklch(0.30 0.012 258);
+  --edge-hi: oklch(0.42 0.012 258);
+
+  --ink:   oklch(0.96 0.004 258);
+  --ink-2: oklch(0.80 0.008 258);
+  --ink-3: oklch(0.665 0.010 258);
+
+  /* Signal: the portfolio amber, lifted for a dark ground. */
+  --signal:      oklch(0.79 0.145 68);
+  --signal-deep: oklch(0.62 0.135 62);
+  --signal-glow: oklch(0.86 0.19 68);
+
+  --ok:   oklch(0.78 0.16 152);
+  --fail: oklch(0.72 0.19 27);
+  --info: oklch(0.76 0.13 232);
+
+  --shadow-ink: oklch(0.08 0.030 262);
+  --elev-1: 0 1px 2px -1px oklch(0.08 0.03 262 / 0.45),
+            0 4px 12px -4px oklch(0.08 0.03 262 / 0.40);
+  --elev-2: 0 2px 4px -2px oklch(0.08 0.03 262 / 0.50),
+            0 12px 32px -8px oklch(0.08 0.03 262 / 0.50);
+  --elev-3: 0 4px 8px -4px oklch(0.08 0.03 262 / 0.55),
+            0 28px 64px -12px oklch(0.08 0.03 262 / 0.62);
+  --edge-top: inset 0 1px 0 var(--edge-hi);
+
+  --r: 10px;          /* structure  */
+  --rc: 8px;          /* controls   */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --fast: 140ms;
+  --slow: 420ms;
+
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Code", Consolas, "Liberation Mono", monospace;
+
+  --shell: 1180px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--sub-0);
+  color: var(--ink);
+  font: 400 clamp(0.95rem, 0.92rem + 0.13vw, 1.0625rem)/1.6 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+code, pre, .mono, .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+a { color: inherit; }
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sub-0), 0 0 0 4px var(--signal);
+  border-radius: var(--rc);
+}
+::selection { background: var(--signal-deep); color: oklch(0.14 0.01 258); }
+
+.shell { width: 100%; max-width: var(--shell); margin-inline: auto; padding-inline: clamp(1.25rem, 1rem + 1.4vw, 2.5rem); }
+
+/* ---------------------------------------------------------- top bar --- */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in oklab, var(--sub-0) 88%, transparent);
+  border-bottom: 1px solid var(--edge-lo);
+}
+.topbar-in { display: flex; align-items: center; gap: 1rem; min-height: 60px; }
+.wordmark { display: inline-flex; align-items: center; gap: 0.6rem; min-height: 40px; padding-right: 0.35rem; border-radius: var(--rc); font: 600 1.0625rem/1 var(--sans); letter-spacing: -0.02em; text-decoration: none; }
+.wordmark svg { display: block; }
+.chip {
+  font: 500 0.6875rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0.4rem 0.55rem; border-radius: 999px; color: var(--ink-3);
+  background: var(--sub-2); box-shadow: var(--edge-top);
+}
+.topnav { margin-left: auto; display: flex; align-items: center; gap: 0.25rem; }
+.topnav a {
+  display: inline-flex; align-items: center; min-height: 36px; padding: 0 0.7rem;
+  border-radius: var(--rc); text-decoration: none; color: var(--ink-2);
+  font: 500 0.875rem/1 var(--sans);
+  transition: color var(--fast) var(--ease), background-color var(--fast) var(--ease);
+}
+.topnav a:hover { color: var(--ink); background: var(--sub-2); }
+@media (max-width: 640px) {
+  .chip { display: none; }
+  .topnav a { padding: 0 0.5rem; font-size: 0.8125rem; }
+  .topbar-in { gap: 0.5rem; }
+}
+
+/* ------------------------------------------------------------- hero --- */
+.hero { position: relative; isolation: isolate; overflow: hidden; padding-block: clamp(3rem, 2rem + 4.5vw, 5.5rem) clamp(2.5rem, 2rem + 3vw, 4rem); }
+.hero::before {
+  content: ""; position: absolute; z-index: -1; inset: -30% -20% auto -20%; height: 150%;
+  pointer-events: none;
+  background:
+    radial-gradient(52% 46% at 14% 4%, oklch(0.86 0.19 68 / 0.16), transparent 68%),
+    radial-gradient(44% 42% at 88% 2%, oklch(0.76 0.13 232 / 0.10), transparent 70%);
+}
+.hero-grid { display: grid; gap: clamp(2rem, 1rem + 3vw, 3.25rem); align-items: start; }
+@media (min-width: 1000px) { .hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.02fr); gap: 3.5rem; } }
+
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  font: 500 0.75rem/1 var(--mono); letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--signal);
+  padding: 0.5rem 0.75rem 0.5rem 0.6rem; border-radius: 999px;
+  background: color-mix(in oklab, var(--signal) 12%, var(--sub-1));
+  box-shadow: var(--edge-top);
+}
+.dot { width: 7px; height: 7px; border-radius: 999px; background: var(--signal); box-shadow: 0 0 0 3px color-mix(in oklab, var(--signal) 22%, transparent); }
+
+h1.display {
+  margin: 1.25rem 0 0;
+  font: 600 clamp(2.6rem, 1.5rem + 4.6vw, 4.35rem)/0.98 var(--sans);
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+h1.display em { font-style: normal; color: var(--signal); }
+.hero-sub { margin: 1.15rem 0 0; max-width: 34rem; color: var(--ink-2); font-size: clamp(1.02rem, 0.98rem + 0.3vw, 1.19rem); line-height: 1.55; }
+
+.cta { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1.75rem; }
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem; min-height: 46px;
+  padding: 0 1.15rem; border-radius: var(--rc); text-decoration: none;
+  font: 600 0.9375rem/1 var(--sans); letter-spacing: -0.005em;
+  transition: transform var(--fast) var(--ease), box-shadow var(--fast) var(--ease),
+              background-color var(--fast) var(--ease), color var(--fast) var(--ease);
+}
+.btn-primary { background: var(--signal); color: oklch(0.16 0.02 68); box-shadow: var(--elev-1); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: var(--elev-2); background: oklch(0.84 0.15 68); }
+.btn-ghost { background: var(--sub-2); color: var(--ink); box-shadow: var(--edge-top), var(--elev-1); }
+.btn-ghost:hover { transform: translateY(-2px); background: var(--sub-3); box-shadow: var(--edge-top), var(--elev-2); }
+.btn svg { display: block; }
+
+.hero-foot { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; font: 400 0.8125rem/1.4 var(--mono); color: var(--ink-3); }
+.hero-foot span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.tick { color: var(--ok); }
+
+/* -------------------------------------------- the hero instrument ----- */
+.instrument {
+  border-radius: var(--r);
+  background: var(--sub-1);
+  box-shadow: var(--edge-top), var(--elev-3);
+  overflow: hidden;
+}
+.inst-bar {
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  padding: 0.75rem 1rem; background: var(--sub-2);
+  border-bottom: 1px solid var(--edge-lo);
+  font: 500 0.75rem/1 var(--mono); letter-spacing: 0.05em; color: var(--ink-3);
+}
+.inst-bar .lights { display: inline-flex; gap: 5px; margin-right: 0.15rem; }
+.inst-bar .lights i { width: 9px; height: 9px; border-radius: 999px; background: var(--sub-3); box-shadow: inset 0 1px 0 var(--edge-hi); }
+.inst-bar .lights i:first-child { background: color-mix(in oklab, var(--fail) 55%, var(--sub-3)); }
+.inst-bar .live { margin-left: auto; display: inline-flex; align-items: center; gap: 0.4rem; color: var(--ok); text-transform: uppercase; }
+.pulse { width: 7px; height: 7px; border-radius: 999px; background: var(--ok); animation: pulse 2.6s var(--ease) infinite; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--ok) 55%, transparent); } 50% { box-shadow: 0 0 0 5px color-mix(in oklab, var(--ok) 0%, transparent); } }
+
+.inst-head { padding: 1.15rem 1.15rem 0.9rem; }
+.meta-grid { display: grid; grid-template-columns: max-content minmax(0,1fr); gap: 0.35rem 1rem; font: 400 0.78rem/1.5 var(--mono); }
+.meta-grid dt { color: var(--ink-3); }
+.meta-grid dd { margin: 0; overflow-wrap: anywhere; color: var(--ink-2); }
+.warnstrip {
+  margin: 0.9rem 1.15rem 0; padding: 0.6rem 0.8rem; border-radius: var(--rc);
+  background: color-mix(in oklab, var(--signal) 14%, var(--sub-1));
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--signal) 30%, transparent);
+  font: 500 0.78rem/1.45 var(--mono); color: var(--signal);
+}
+
+.checks { padding: 0.9rem 0.75rem 0.75rem; display: grid; gap: 0.5rem; }
+.check {
+  display: grid; grid-template-columns: 74px minmax(0,1fr); gap: 0.85rem; align-items: start;
+  padding: 0.8rem 0.85rem; border-radius: var(--rc);
+  background: var(--sub-2); box-shadow: var(--edge-top);
+  transition: transform var(--fast) var(--ease), box-shadow var(--fast) var(--ease);
+}
+.check:hover { transform: translateX(2px); box-shadow: var(--edge-top), var(--elev-1); }
+.verdict {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 26px;
+  border-radius: 999px; font: 700 0.6875rem/1 var(--mono); letter-spacing: 0.09em; text-transform: uppercase;
+}
+.v-pass { background: color-mix(in oklab, var(--ok) 20%, var(--sub-2)); color: var(--ok); box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ok) 34%, transparent); }
+.v-none { background: var(--sub-3); color: var(--ink-3); box-shadow: inset 0 0 0 1px var(--edge-lo); }
+.check-cmd { font: 500 0.875rem/1.3 var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+.check-note { margin-top: 0.3rem; font-size: 0.78rem; line-height: 1.45; color: var(--ink-3); }
+.check-note b { color: var(--ink-2); font-weight: 600; }
+.check[data-state="none"] { background: var(--sub-1); box-shadow: inset 0 0 0 1px var(--edge-lo); }
+.check[data-state="none"] .check-cmd { color: var(--ink-3); }
+
+/* The refusal cell: where a lesser tool prints a fabricated 0. */
+.void {
+  display: inline-flex; align-items: center; gap: 0.45rem; margin-top: 0.45rem;
+  padding: 0.25rem 0.5rem; border-radius: 5px;
+  background: repeating-linear-gradient(135deg,
+    oklch(0.72 0.19 27 / 0.10) 0 6px, transparent 6px 12px);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--fail) 32%, transparent);
+  font: 600 0.7rem/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fail);
+}
+
+.inst-foot {
+  padding: 0.8rem 1.15rem 1.05rem; border-top: 1px solid var(--edge-lo);
+  font: 400 0.75rem/1.5 var(--mono); color: var(--ink-3);
+}
+
+/* --------------------------------------------------------- readouts --- */
+.readouts { border-top: 1px solid var(--edge-lo); background: var(--sub-1); }
+.readout-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); }
+@media (min-width: 760px) { .readout-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } }
+.readout { padding: clamp(1.5rem, 1rem + 1.6vw, 2.25rem) clamp(1.25rem, 1rem + 1.4vw, 2rem); position: relative; }
+.readout + .readout { box-shadow: inset 1px 0 0 var(--edge-lo); }
+@media (max-width: 759px) { .readout:nth-child(odd) + .readout { box-shadow: inset 1px 0 0 var(--edge-lo); } .readout:nth-child(n+3) { box-shadow: inset 0 1px 0 var(--edge-lo); } .readout:nth-child(4) { box-shadow: inset 1px 0 0 var(--edge-lo), inset 0 1px 0 var(--edge-lo); } }
+.readout .n { display: block; font: 500 clamp(2.4rem, 1.6rem + 3vw, 3.6rem)/0.9 var(--mono); letter-spacing: -0.035em; font-variant-numeric: tabular-nums; }
+.readout .n.sig { color: var(--signal); }
+.readout .n.ok { color: var(--ok); }
+.readout .k { display: block; margin-top: 0.6rem; font: 500 0.7rem/1.3 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.readout .s { display: block; margin-top: 0.35rem; font-size: 0.8125rem; line-height: 1.4; color: var(--ink-3); }
+
+/* ------------------------------------------------------------ bands --- */
+.band { padding-block: clamp(3.25rem, 2.25rem + 4vw, 6rem); border-top: 1px solid var(--edge-lo); }
+.band[data-tone="1"] { background: var(--sub-1); }
+.band-head { max-width: 46rem; }
+.kicker { font: 500 0.72rem/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--signal); }
+h2 { margin: 0.9rem 0 0; font: 600 clamp(1.75rem, 1.2rem + 2.1vw, 2.6rem)/1.06 var(--sans); letter-spacing: -0.028em; text-wrap: balance; }
+.band-head p { margin: 0.85rem 0 0; color: var(--ink-2); max-width: 40rem; }
+
+/* --- the comparison: the whole thesis, as three panels, not paragraphs */
+.versus { display: grid; gap: 1rem; margin-top: 2.25rem; }
+@media (min-width: 860px) { .versus { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+.vcard {
+  border-radius: var(--r); background: var(--sub-2); box-shadow: var(--edge-top), var(--elev-1);
+  padding: 1.35rem; display: flex; flex-direction: column; gap: 0.75rem;
+  transition: transform var(--slow) var(--ease), box-shadow var(--slow) var(--ease);
+}
+.vcard:hover { transform: translateY(-3px); box-shadow: var(--edge-top), var(--elev-2); }
+.vcard[data-kind="good"] { background: var(--sub-3); }
+.vlabel { font: 500 0.7rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); }
+.vcard[data-kind="good"] .vlabel { color: var(--signal); }
+.vscreen {
+  border-radius: var(--rc); background: var(--sub-0); box-shadow: inset 0 0 0 1px var(--edge-lo);
+  padding: 0.95rem 1rem; font: 400 0.8rem/1.55 var(--mono); color: var(--ink-2);
+  display: flex; flex-direction: column; gap: 0.4rem; min-height: 118px; justify-content: center;
+}
+.vscreen .big { font-size: 1.9rem; line-height: 1; letter-spacing: -0.03em; color: var(--ink); }
+.vscreen .big.lie { color: var(--fail); text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: color-mix(in oklab, var(--fail) 70%, transparent); }
+.vscreen .big.true { color: var(--ok); }
+.vscreen .muted { color: var(--ink-3); font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.vcaption { font-size: 0.86rem; line-height: 1.5; color: var(--ink-2); }
+.vcaption b { color: var(--ink); font-weight: 600; }
+
+/* --- the honesty law: numbered rules, detail behind a disclosure ------ */
+.laws { display: grid; gap: 0.75rem; margin-top: 2.25rem; }
+@media (min-width: 900px) { .laws { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+.law {
+  border-radius: var(--r); background: var(--sub-2); box-shadow: var(--edge-top), var(--elev-1);
+  overflow: hidden;
+  transition: box-shadow var(--slow) var(--ease);
+}
+.law:hover { box-shadow: var(--edge-top), var(--elev-2); }
+.law > summary {
+  list-style: none; cursor: pointer; padding: 1.05rem 1.15rem;
+  display: grid; grid-template-columns: 2.1rem minmax(0,1fr) 1.5rem; gap: 0.85rem; align-items: start;
+  min-height: 48px;
+}
+.law > summary::-webkit-details-marker { display: none; }
+.law .idx { font: 500 0.75rem/1.6 var(--mono); color: var(--signal); letter-spacing: 0.06em; }
+.law .title { font: 600 1rem/1.4 var(--sans); letter-spacing: -0.012em; }
+.law .caret { justify-self: end; color: var(--ink-3); transition: transform var(--fast) var(--ease); }
+.law[open] .caret { transform: rotate(90deg); }
+.law .body { padding: 0 1.15rem 1.2rem 4.05rem; color: var(--ink-2); font-size: 0.9rem; line-height: 1.62; }
+.law .body code { color: var(--ink); background: var(--sub-3); padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.86em; }
+
+/* --------------------------------------------------------- terminal --- */
+.install-grid { display: grid; gap: 1.25rem; margin-top: 2.25rem; align-items: start; }
+@media (min-width: 940px) { .install-grid { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 2.5rem; } }
+.term {
+  border-radius: var(--r); overflow: hidden;
+  background: var(--sub-0); box-shadow: var(--edge-top), var(--elev-2);
+}
+.term-bar { display: flex; align-items: center; gap: 0.55rem; padding: 0.7rem 0.95rem; background: var(--sub-2); border-bottom: 1px solid var(--edge-lo); font: 500 0.72rem/1 var(--mono); letter-spacing: 0.06em; color: var(--ink-3); }
+.term-bar i { width: 9px; height: 9px; border-radius: 999px; background: var(--sub-3); }
+.term pre { margin: 0; padding: 1.15rem; overflow-x: auto; font: 400 0.86rem/1.85 var(--mono); }
+.term .p { color: var(--signal); user-select: none; }
+.term .c { color: var(--ink); }
+.term .o { color: var(--ink-3); }
+
+.exits { display: grid; gap: 0.5rem; }
+.exits h3 { margin: 0 0 0.25rem; font: 500 0.72rem/1 var(--mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+.exit { display: grid; grid-template-columns: 2.4rem minmax(0,1fr); gap: 0.75rem; align-items: center; min-height: 44px; padding: 0.55rem 0.8rem; border-radius: var(--rc); background: var(--sub-2); box-shadow: var(--edge-top); font: 400 0.86rem/1.35 var(--sans); color: var(--ink-2); }
+.exit b { display: inline-flex; align-items: center; justify-content: center; width: 2.4rem; height: 1.9rem; border-radius: 6px; background: var(--sub-3); font: 700 0.86rem/1 var(--mono); color: var(--signal); }
+
+/* ------------------------------------------------------------ limits -- */
+.limits { margin-top: 2rem; border-top: 1px solid var(--edge-lo); }
+.limit {
+  display: grid; gap: 0.35rem 1.75rem; padding: 1.4rem 0.25rem;
+  border-bottom: 1px solid var(--edge-lo);
+  transition: background-color var(--fast) var(--ease);
+}
+@media (min-width: 820px) { .limit { grid-template-columns: 3rem minmax(0, 22rem) minmax(0, 1fr); align-items: baseline; padding-inline: 0.75rem; } }
+.limit:hover { background: color-mix(in oklab, var(--ink) 3%, transparent); }
+.limit .no { font: 500 0.75rem/1.6 var(--mono); letter-spacing: 0.08em; color: var(--fail); }
+.limit h3 { margin: 0; font: 600 clamp(1rem, 0.95rem + 0.3vw, 1.2rem)/1.3 var(--sans); letter-spacing: -0.015em; }
+.limit p { margin: 0; font-size: 0.9rem; line-height: 1.6; color: var(--ink-3); }
+
+/* ------------------------------------------------------------ footer -- */
+footer.site { border-top: 1px solid var(--edge-lo); padding-block: 2.5rem 3rem; background: var(--sub-1); }
+.foot-in { display: flex; flex-wrap: wrap; gap: 1.25rem 2rem; align-items: center; justify-content: space-between; font-size: 0.86rem; color: var(--ink-3); }
+.aj-attribution { margin: 0; font: inherit; line-height: 1.5; color: var(--ink-2); }
+.aj-attribution__mark { display: inline-block; width: 20px; height: 20px; vertical-align: -0.3em; margin-right: 0.45em; }
+.aj-attribution a { color: inherit; text-decoration: underline; text-underline-offset: 0.15em; }
+.aj-attribution a:hover { color: var(--ink); text-decoration-thickness: 2px; }
+.aj-attribution__sep { margin: 0 0.35em; }
+.aj-attribution { --aj-attribution-signal: var(--signal); }
+.foot-in a { color: var(--ink-2); }
+.foot-in a:hover { color: var(--ink); }
+
+/* ------------------------------------------------------------ motion -- */
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise var(--slow) var(--ease) both; }
+.d1 { animation-delay: 70ms; } .d2 { animation-delay: 140ms; } .d3 { animation-delay: 210ms; } .d4 { animation-delay: 300ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important; animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg:#16171a; --panel:#1d1f23; --ink:#eceae4; --dim:#a3a199; --rule:#2e3138; --accent:#e0a458; --pass-bg:#12291a; --pass-ink:#7fd39b; --fail-bg:#2b1717; --fail-ink:#f0908c; }
-  }
-  * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
-  body {
-    margin: 0; background: var(--bg); color: var(--ink);
-    font-family: ui-serif, Georgia, "Times New Roman", serif;
-    font-size: var(--fs-body); line-height: 1.65;
-  }
-  code, pre, .mono { font-family: ui-monospace, "SF Mono", Consolas, "Liberation Mono", monospace; }
-  .wrap { max-width: 46rem; margin: 0 auto; padding: 4rem 1.25rem 5rem; }
-  header { border-bottom: 1px solid var(--rule); padding-bottom: 1.75rem; margin-bottom: 2.5rem; }
-  h1 { font-size: var(--fs-hero); line-height: 1.2; margin: 0 0 .5rem; letter-spacing: -0.01em; }
-  h2 { font-size: var(--fs-title); line-height: 1.25; margin: 3rem 0 .75rem; }
-  h3 { font-size: var(--fs-head); margin: 2rem 0 .5rem; }
-  .lede { font-size: var(--fs-head); color: var(--dim); margin: 0; }
-  .meta { font-size: var(--fs-meta); color: var(--dim); }
-  a { color: var(--accent); text-underline-offset: 2px; }
-  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  pre {
-    background: var(--panel); border: 1px solid var(--rule); border-radius: 6px;
-    padding: .9rem 1rem; overflow-x: auto; font-size: var(--fs-meta); line-height: 1.6;
-    overflow-wrap: anywhere;
-  }
-  .cta { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.75rem 0 0; }
-  .btn {
-    display: inline-block; padding: .55rem 1rem; border-radius: 6px;
-    border: 1px solid var(--rule); background: var(--panel); color: var(--ink);
-    text-decoration: none; font-size: var(--fs-meta);
-  }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-  @media (prefers-color-scheme: dark) { .btn.primary { color: #16171a; } }
-  .rows { border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; margin: 1.25rem 0; }
-  .row { display: flex; gap: .75rem; align-items: baseline; padding: .7rem 1rem; border-top: 1px solid var(--rule); font-size: var(--fs-meta); }
-  .row:first-child { border-top: 0; }
-  .tag { font-size: var(--fs-meta); padding: .1rem .5rem; border-radius: 999px; white-space: nowrap; }
-  .tag.pass { background: var(--pass-bg); color: var(--pass-ink); }
-  .tag.fail { background: var(--fail-bg); color: var(--fail-ink); }
-  ul { padding-left: 1.15rem; }
-  li { margin: .4rem 0; }
-  footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--rule); font-size: var(--fs-meta); color: var(--dim); }
-  /* attribution-kit v1 — the maker's mark inherits color; the pin takes the site's amber */
-  .aj-attribution { margin: 0; font: inherit; line-height: 1.5; color: inherit; }
-  .aj-attribution__mark { display: inline-block; width: 20px; height: 20px; vertical-align: -0.3em; margin-right: 0.45em; }
-  .aj-attribution__mark--full { width: 48px; height: 48px; vertical-align: middle; }
-  .aj-attribution a { color: inherit; text-decoration: underline; text-underline-offset: 0.15em; }
-  .aj-attribution a:hover { text-decoration-thickness: 2px; }
-  .aj-attribution a:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
-  .aj-attribution__sep { margin: 0 0.35em; }
-  .aj-attribution { --aj-attribution-signal: var(--accent); }
-  @media print { .cta, footer { display: none } body { background: #fff } }
+  .rise { animation: none; }
+  .btn:hover, .vcard:hover, .check:hover { transform: none; }
+}
+
+@media print {
+  body { background: #fff; color: #000; }
+  .topbar, .cta, .hero::before, footer.site { display: none; }
+}
 </style>
 </head>
 <body>
-<main class="wrap">
 
-<header>
-  <h1>proofpage</h1>
-  <p class="lede">Runs your repo's real test, typecheck, build and lint commands, then turns the result into one self-contained HTML page. It refuses to print any number it did not measure.</p>
-  <div class="cta">
-    <a class="btn primary" href="./proof.html">See a real one</a>
-    <a class="btn" href="https://github.com/jamessuuu/proofpage">Source</a>
+<header class="topbar">
+  <div class="shell topbar-in">
+    <a class="wordmark" href="/">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="var(--sub-2)" stroke="var(--edge-hi)"/>
+        <path d="M6.5 12.4l3.2 3.3 7.8-8" stroke="var(--signal)" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      proofpage
+    </a>
+    <span class="chip">v0.1 · MIT</span>
+    <nav class="topnav">
+      <a href="./proof">Live receipt</a>
+      <a href="https://github.com/jamessuuu/proofpage">Source</a>
+    </nav>
   </div>
-  <p class="meta" style="margin-top:1rem">MIT. Zero dependencies. Node 22+.</p>
 </header>
 
-<h2>The first command in my README did not work, and 51 passing tests never noticed</h2>
+<main>
 
-<p>proofpage shipped with 51 green tests. Its README opened with this:</p>
+<!-- ══════════════════════════════════════════════════════ HERO ════════ -->
+<section class="hero">
+  <div class="shell hero-grid">
 
-<pre>proofpage --out examples/self-proof.html</pre>
+    <div>
+      <p class="eyebrow rise"><span class="dot"></span>receipts, not screenshots</p>
+      <h1 class="display rise d1">Every number names the command that <em>actually ran</em>.</h1>
+      <p class="hero-sub rise d2">
+        proofpage executes your repo's real test, typecheck, build and lint commands,
+        then writes one self-contained HTML page from what happened. A check that did
+        not run gets no number at all.
+      </p>
+      <div class="cta rise d3">
+        <a class="btn btn-primary" href="./proof">
+          Open a real receipt
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/jamessuuu/proofpage">Read the source</a>
+      </div>
+      <p class="hero-foot rise d4">
+        <span><span class="tick">✓</span> zero dependencies</span>
+        <span><span class="tick">✓</span> zero JavaScript in output</span>
+        <span><span class="tick">✓</span> Node 22+</span>
+      </p>
+    </div>
 
-<p>A fresh install has no <code>examples/</code> directory, and proofpage does not create
-one. So the first command a new user copy-pasted died with <code>ENOENT</code>.</p>
+    <!-- The artifact itself, rendered at size. This is a verbatim reading of
+         site/proof.html, the page proofpage generated about its own repo. -->
+    <div class="instrument rise d2">
+      <div class="inst-bar">
+        <span class="lights"><i></i><i></i><i></i></span>
+        proof.html — generated 2026-09-05
+        <span class="live"><span class="pulse"></span>real run</span>
+      </div>
 
-<p>Fifty-one tests could not catch it, and more tests in the same style never would
-have. They all run inside the repo, where <code>examples/</code> exists because it is
-committed. The bug lived in the gap between "works on the author's machine" and
-"works on a machine that just installed it".</p>
+      <div class="inst-head">
+        <dl class="meta-grid">
+          <dt>commit</dt><dd>550dfe6c517156fbf3117a04ac5b2fd7fa8b96aa</dd>
+          <dt>branch</dt><dd>main</dd>
+          <dt>node</dt><dd>v24.15.0 · win32 x64</dd>
+          <dt>discovered</dt><dd>auto-detected from package.json scripts</dd>
+        </dl>
+      </div>
 
-<p>What caught it was a check that packs the tarball, installs it into a temp
-directory, and runs the README's first command there. It failed immediately.</p>
+      <p class="warnstrip">⚠ working tree was DIRTY — uncommitted changes may not be in the commit above</p>
 
-<p>That is the whole idea behind this tool: <strong>a test suite is a closed world,
-and some claims are claims about the world outside it.</strong></p>
+      <div class="checks">
+        <div class="check">
+          <span class="verdict v-pass">exit 0</span>
+          <div>
+            <div class="check-cmd">npm test</div>
+            <p class="check-note"><b>54 pass · 0 fail</b> — parsed from a real <code>node:test</code> summary, 7.87s</p>
+          </div>
+        </div>
 
-<h2>What a page looks like</h2>
+        <div class="check">
+          <span class="verdict v-pass">exit 0</span>
+          <div>
+            <div class="check-cmd">npm run lint</div>
+            <p class="check-note">output shape unrecognised — recorded as <b>unparsed</b>, and deliberately not scored</p>
+          </div>
+        </div>
 
-<p>Every row is a command that actually ran, with the exit code it returned:</p>
+        <div class="check" data-state="none">
+          <span class="verdict v-none">no run</span>
+          <div>
+            <div class="check-cmd">npm run typecheck</div>
+            <p class="check-note">no such script in this repo</p>
+            <span class="void">
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" aria-hidden="true"><circle cx="6" cy="6" r="5" stroke="currentColor" stroke-width="1.6"/><path d="M2.6 9.4L9.4 2.6" stroke="currentColor" stroke-width="1.6"/></svg>
+              no number printed
+            </span>
+          </div>
+        </div>
+      </div>
 
-<div class="rows">
-  <div class="row"><span class="tag pass">exit 0</span> <code class="mono">npm test</code> <span class="meta">node:test summary parsed &mdash; 54 pass, 0 fail</span></div>
-  <div class="row"><span class="tag pass">exit 0</span> <code class="mono">node scripts/lint.mjs</code> <span class="meta">output shape unrecognised &mdash; marked <strong>unparsed</strong>, not scored</span></div>
-  <div class="row"><span class="tag fail">did not run</span> <code class="mono">npm run typecheck</code> <span class="meta">no such script &mdash; no number is printed for it</span></div>
-</div>
+      <p class="inst-foot">2 of 2 discovered checks passed. The third row is what most tools would render as <code>0</code>.</p>
+    </div>
 
-<p>That second row is the point. proofpage parses <code>node:test</code> and
-<code>tsc</code> output because those shapes are unambiguous. It guesses at nothing
-else, so its own lint script renders as <em>unparsed</em> rather than being given a
-score it did not earn.</p>
+  </div>
+</section>
 
-<h2>The honesty law</h2>
+<!-- ══════════════════════════════════════════════════ READOUTS ════════ -->
+<section class="readouts">
+  <div class="shell readout-grid" style="padding-inline:0">
+    <div class="readout"><span class="n ok">54</span><span class="k">tests passed</span><span class="s">parsed from the real summary</span></div>
+    <div class="readout"><span class="n">0</span><span class="k">tests failed</span><span class="s">exit code 0, measured</span></div>
+    <div class="readout"><span class="n sig">1</span><span class="k">check unparsed</span><span class="s">labelled, never scored</span></div>
+    <div class="readout"><span class="n">0</span><span class="k">numbers invented</span><span class="s">enforced by <code>--check</code></span></div>
+  </div>
+</section>
 
-<ul>
-  <li>A check that did not run shows no exit code and no count. Not <code>0</code> &mdash; nothing, with a line saying it did not run. <code>0</code> is a measurement, and printing it for "unknown" is the exact lie this tool exists to prevent.</li>
-  <li>Output that cannot be parsed with confidence is marked <code>unparsed</code>, with the reason.</li>
-  <li>If the working tree was dirty when the checks ran, the page says so next to the commit SHA. A receipt from an uncommitted tree is a receipt for code nobody else can check out.</li>
-  <li>If git is unavailable, the header says so rather than showing a fabricated commit.</li>
-</ul>
+<!-- ══════════════════════════════════════════════════ THE THESIS ═════ -->
+<section class="band">
+  <div class="shell">
+    <div class="band-head">
+      <p class="kicker">the refusal</p>
+      <h2>A zero you did not measure is a lie with a number on it.</h2>
+      <p>Three tools, one repo, one missing <code>typecheck</code> script. Only the third tells you the truth about what it knows.</p>
+    </div>
 
-<p>Each of those is a test, not a policy.</p>
+    <div class="versus">
+      <article class="vcard">
+        <span class="vlabel">badge generator</span>
+        <div class="vscreen">
+          <span class="muted">typecheck</span>
+          <span class="big lie">0 errors</span>
+          <span class="muted">never executed</span>
+        </div>
+        <p class="vcaption">Defaults an absent check to a passing number. The badge is green and the claim is fictional.</p>
+      </article>
 
-<h2>The page fetches nothing</h2>
+      <article class="vcard">
+        <span class="vlabel">dashboard</span>
+        <div class="vscreen">
+          <span class="muted">typecheck</span>
+          <span class="big" style="color:var(--ink-3)">—</span>
+          <span class="muted">status unknown</span>
+        </div>
+        <p class="vcaption">Silently drops the row. You cannot tell a check that passed from one that was never wired up.</p>
+      </article>
 
-<p>Zero JavaScript, zero network requests, and every <code>&lt;details&gt;</code> is open
-by default, because a collapsed one is dropped entirely when the page is printed to
-PDF. A receipts page that silently loses its evidence when printed is worse than no
-receipts page.</p>
+      <article class="vcard" data-kind="good">
+        <span class="vlabel">proofpage</span>
+        <div class="vscreen">
+          <span class="muted">typecheck</span>
+          <span class="big true">did not run</span>
+          <span class="muted">no such script — no count shown</span>
+        </div>
+        <p class="vcaption"><b>The absence is the finding.</b> Every rule here is a test in the repo, not a policy in a README.</p>
+      </article>
+    </div>
+  </div>
+</section>
 
-<p><code>proofpage --check &lt;file&gt;</code> enforces all of that mechanically, on any
-page, including one you did not generate. Every rule has a fixture that violates
-exactly that rule and a test asserting the check fails on it.</p>
+<!-- ══════════════════════════════════════════════════ THE LAWS ═══════ -->
+<section class="band" data-tone="1">
+  <div class="shell">
+    <div class="band-head">
+      <p class="kicker">enforced mechanically</p>
+      <h2>Four laws, each pinned by a fixture that violates exactly it.</h2>
+      <p><code>proofpage --check &lt;file&gt;</code> re-runs all four against any page, including one you did not generate.</p>
+    </div>
 
-<h2>Use it</h2>
+    <div class="laws">
+      <details class="law" open>
+        <summary>
+          <span class="idx">01</span>
+          <span class="title">A check that did not run shows nothing — not zero</span>
+          <span class="caret" aria-hidden="true">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </summary>
+        <div class="body">No exit code, no count, and a line saying it did not run. <code>0</code> is a measurement; printing it for "unknown" is the exact lie this tool exists to prevent.</div>
+      </details>
 
-<pre>npx proofpage --out proof.html
-npx proofpage --check proof.html</pre>
+      <details class="law">
+        <summary>
+          <span class="idx">02</span>
+          <span class="title">Unrecognised output is marked <code style="font-size:.9em">unparsed</code>, with the reason</span>
+          <span class="caret" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </summary>
+        <div class="body">Only <code>node:test</code> and <code>tsc</code> shapes are unambiguous enough to parse. proofpage's own lint script renders as unparsed rather than being handed a score it did not earn.</div>
+      </details>
 
-<p class="meta">Exit <code>0</code> everything passed &middot; <code>1</code> a check
-failed, which is the CI signal &middot; <code>2</code> used wrongly, so nothing was
-measured and nothing is claimed.</p>
+      <details class="law">
+        <summary>
+          <span class="idx">03</span>
+          <span class="title">A dirty tree is stated next to the commit SHA</span>
+          <span class="caret" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </summary>
+        <div class="body">A receipt from an uncommitted tree is a receipt for code nobody else can check out. If git is unavailable at all, the header says so rather than showing a fabricated commit.</div>
+      </details>
 
-<h2>What it will not tell you</h2>
+      <details class="law">
+        <summary>
+          <span class="idx">04</span>
+          <span class="title">Every <code style="font-size:.9em">&lt;details&gt;</code> ships open, because print drops the closed ones</span>
+          <span class="caret" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </summary>
+        <div class="body">Zero JavaScript, zero network requests. A receipts page that silently loses its evidence when printed to PDF is worse than no receipts page at all.</div>
+      </details>
+    </div>
+  </div>
+</section>
 
-<ul>
-  <li>Whether your tests are any good. A green proofpage page over a suite of empty tests is an honest report of a worthless suite.</li>
-  <li>Counts for anything other than <code>node:test</code> and <code>tsc</code>. Vitest, Jest and pytest shapes are not parsed yet.</li>
-  <li>Anything about a commit other than the one it measured. It is a snapshot, not a monitor, and it says which.</li>
-</ul>
+<!-- ══════════════════════════════════════════════════ INSTALL ════════ -->
+<section class="band">
+  <div class="shell">
+    <div class="band-head">
+      <p class="kicker">two commands</p>
+      <h2>Generate it, then let CI verify it.</h2>
+    </div>
 
-<footer>
-  <!-- attribution-kit v1 -->
-  <p class="aj-attribution">
-    <svg class="aj-attribution__mark" viewBox="0 0 32 32" width="20" height="20" role="img" aria-label="Agent James"><path fill="currentColor" d="M1 10h3v4H1zM28 10h3v4h-3zM10 1h4v3h-4zM10 28h4v3h-4zM1 18h3v4H1zM28 18h3v4h-3zM18 1h4v3h-4zM18 28h4v3h-4z"/><path fill="currentColor" fill-rule="evenodd" d="M5 4h22a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM18.3 9h3.4v8a5.7 5.7 0 0 1-5.7 5.7H12v-3.4h4a2.3 2.3 0 0 0 2.3-2.3z"/><rect x="6.5" y="6.5" width="3.5" height="3.5" fill="var(--aj-attribution-signal, #B45309)"/></svg>Built by <a href="https://agentjames.vercel.app" rel="me noopener">James Lorenz Santos</a><span class="aj-attribution__sep" aria-hidden="true">&middot;</span><a href="https://www.linkedin.com/in/james-lorenz-santos-720776251/" rel="me noopener" target="_blank">LinkedIn</a>
-  </p>
-  <p>Source at <a href="https://github.com/jamessuuu/proofpage">github.com/jamessuuu/proofpage</a>. MIT.</p>
-</footer>
+    <div class="install-grid">
+    <div class="term">
+      <div class="term-bar"><i></i><i></i><i></i> bash</div>
+      <pre><code><span class="p">$</span> <span class="c">npx proofpage --out proof.html</span>
+<span class="o">  ✓ npm test            exit 0   54 pass · 0 fail
+  ✓ npm run lint        exit 0   unparsed
+  · npm run typecheck   did not run
+  wrote proof.html (18 KB, 0 network requests)</span>
+
+<span class="p">$</span> <span class="c">npx proofpage --check proof.html</span>
+<span class="o">  ✓ 4 of 4 structural rules hold</span></code></pre>
+    </div>
+
+    <div class="exits">
+      <h3>exit codes</h3>
+      <span class="exit"><b>0</b> <span>everything measured passed</span></span>
+      <span class="exit"><b>1</b> <span>a check failed — this is the CI signal</span></span>
+      <span class="exit"><b>2</b> <span>used wrongly, so nothing was measured and nothing is claimed</span></span>
+    </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════════ LIMITS ═════════ -->
+<section class="band" data-tone="1">
+  <div class="shell">
+    <div class="band-head">
+      <p class="kicker">stated up front</p>
+      <h2>What it will not tell you.</h2>
+    </div>
+    <div class="limits">
+      <article class="limit">
+        <span class="no">N01</span>
+        <h3>Whether your tests are any good</h3>
+        <p>A green proofpage over a suite of empty tests is an honest report of a worthless suite. It measures that the commands ran, not that they were worth running.</p>
+      </article>
+      <article class="limit">
+        <span class="no">N02</span>
+        <h3>Counts outside node:test and tsc</h3>
+        <p>Vitest, Jest and pytest summary shapes are not parsed yet. Those rows are labelled unparsed rather than guessed at.</p>
+      </article>
+      <article class="limit">
+        <span class="no">N03</span>
+        <h3>Anything about another commit</h3>
+        <p>It is a snapshot, not a monitor — and the page names the exact commit and working-tree state it measured.</p>
+      </article>
+    </div>
+  </div>
+</section>
 
 </main>
+
+<footer class="site">
+  <div class="shell foot-in">
+    <!-- attribution-kit v1 -->
+    <p class="aj-attribution">
+      <svg class="aj-attribution__mark" viewBox="0 0 32 32" width="20" height="20" role="img" aria-label="Agent James"><path fill="currentColor" d="M1 10h3v4H1zM28 10h3v4h-3zM10 1h4v3h-4zM10 28h4v3h-4zM1 18h3v4H1zM28 18h3v4h-3zM18 1h4v3h-4zM18 28h4v3h-4z"/><path fill="currentColor" fill-rule="evenodd" d="M5 4h22a1 1 0 0 1 1 1v22a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM18.3 9h3.4v8a5.7 5.7 0 0 1-5.7 5.7H12v-3.4h4a2.3 2.3 0 0 0 2.3-2.3z"/><rect x="6.5" y="6.5" width="3.5" height="3.5" fill="var(--aj-attribution-signal, #B45309)"/></svg>Built by <a href="https://agentjames.vercel.app" rel="me noopener">James Lorenz Santos</a><span class="aj-attribution__sep" aria-hidden="true">·</span><a href="https://www.linkedin.com/in/james-lorenz-santos-720776251/" rel="me noopener" target="_blank">LinkedIn</a>
+    </p>
+    <p style="margin:0">Source at <a href="https://github.com/jamessuuu/proofpage">github.com/jamessuuu/proofpage</a> · MIT</p>
+  </div>
+</footer>
+
 </body>
 </html>
